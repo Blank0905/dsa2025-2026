@@ -3,11 +3,11 @@
 using namespace std;
 
 int main() {
-    int n, m; //n幾個名字，m名字多長
+    int n, m;
     cin >> n >> m;
-    char **column = new char*[n]; //直的那行指標存指標
+    char **column =(char**)malloc(n* sizeof(char*));
     for (int i =0; i< n; i++) {
-        column[i] = new char[m+1];
+        column[i] =(char*) malloc((m+1)*sizeof(char));//留一格給\0
     }
     for (int i=0;i<n ; i++) {
         cin >> column[i];    
@@ -28,10 +28,9 @@ int main() {
     for (int i=0;i<n ; i++) {
         cout << column[i] << "\n";
     }
-
     for(int i = 0; i <n; i++) {
-        delete []column[i];
+        free(column[i]);
     }
-    delete []column;
+    free(column);
     return 0;
 }
