@@ -1,4 +1,4 @@
-#include<iostream>
+#include <iostream>
 #include <string>
 #include <cstring>
 using namespace std;
@@ -32,11 +32,9 @@ int main() {
             cout << " ";
         }
         cout << list[i] << endl;
-    }
-
-    for (int i=0; i<n; i++) {
         delete []list[i];
     }
+    
     delete []list;
     delete []namelist;
     return 0;

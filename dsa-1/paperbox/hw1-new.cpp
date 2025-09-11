@@ -9,8 +9,9 @@ int main() {
     for (int i =0; i< n; i++) {
         column[i] = new char[m+1];//留一格給\0
     }
+    cin.ignore();
     for (int i=0;i<n ; i++) {
-        cin >> column[i];    
+        cin.getline(column[i], m+1);   
     }
     for(int j = n; j>0; j--) {
         for(int i=0; i<j-1; i++) {
