@@ -25,10 +25,10 @@ int main() {
     char** list = new char*[n];//創二維陣列來存
     for(int i=0;i<n;i++) {
         list[i] = new char[longest+1];
-        strcpy(list[i], namelist[i].c_str());
+        strcpy(list[i], namelist[i].c_str()); //把字串轉成字元
     }
     for (int i=0;i<n;i++) {
-        for(int j=0;j<thespace-firstspace[i];j++){
+        for(int j=0;j<thespace-firstspace[i];j++){//印空格
             cout << " ";
         }
         cout << list[i] << endl;
