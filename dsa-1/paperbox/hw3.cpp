@@ -64,7 +64,7 @@ class CppArray {
     }
 
     private:
-    float* cpp_array;
+    float* cpp_array;//補4
     int arr_size;
 
 
