@@ -64,10 +64,8 @@ class CppArray {
     }
 
     private:
-    float* cpp_array;//補4
+    float* cpp_array;
     int arr_size;
-
-
 };
 
 ostream& operator << (ostream& os, CppArray& cp2) {
@@ -81,6 +79,13 @@ ostream& operator << (ostream& os, CppArray& cp2) {
     return os;
 }
 
+istream& operator >> (istream& is, CppArray& cp2) {
+    for (int i = 0; i < cp2.arr_size; i++) {
+        is >> cp2.cpp_array[i];
+    }
+    return is;
+}
+
 int main() {
 
     CppArray cp1;
@@ -90,6 +95,8 @@ int main() {
     cp1.operator= (cp2);
     cout << cp1.GetSize() << endl;
     cout << cp1[1] << endl;
+    cout << cp2;
+    cin >> cp2;
     cout << cp2;
     
     return 0;
