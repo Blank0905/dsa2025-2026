@@ -1,4 +1,6 @@
 #include <iostream>
+#include <stdexcept>
+#include <exception>
 using namespace std;
 
 const int defaultSize = 5;
@@ -41,12 +43,12 @@ class CppArray {
         return *this;
     }
 
-    float& operator[] (int i) {
+    float& operator[] (int i) { //實作輸出陣列某個值
         if(i >= arr_size) {
-            cout << "too big" << endl;
+            throw out_of_range("i out of range");
         }
         else if (i < 0) {
-            cout << "too small" << endl;
+            throw out_of_range("i out of range");
         }
         return cpp_array[i];
     }
@@ -92,12 +94,16 @@ int main() {
     CppArray cp2(3, 3);
     cout << cp1.GetSize() << endl;
     cp1 = cp2;
-    cp1.operator= (cp2);
     cout << cp1.GetSize() << endl;
-    cout << cp1[1] << endl;
+    
     cout << cp2;
-    cin >> cp2;
     cout << cp2;
+    try {
+        cout << cp1[4] << endl;
+    }
+    catch (out_of_range& e) {
+            cerr << e.what() << endl;
+    }
     
     return 0;
 }
