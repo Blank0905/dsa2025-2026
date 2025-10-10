@@ -71,13 +71,14 @@ class CppArray {
 };
 
 ostream& operator << (ostream& os, CppArray& cp2) {
+    cout << "[";
     for (int i = 0; i < cp2.arr_size; i++) {
         os << cp2.cpp_array[i];
         if (i < cp2.arr_size-1) {
             os << ", ";
         }
     }
-    os << endl;
+    os << "]" << endl;
     return os;
 }
 
