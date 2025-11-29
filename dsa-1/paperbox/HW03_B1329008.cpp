@@ -4,18 +4,20 @@
 using namespace std;
 
 const int defaultSize = 5;
-const float defaultValue = 1.0f;
+const float defaultValue = 3.14f;
 
 class CppArray {
     public:
 
     CppArray (int size = defaultSize, float initValue = defaultValue) {//建立陣列
-        arr_size = size;
+        
         if(size <= 0) {
             cout << "size can not be zero" << endl;
+            arr_size = defaultSize;
         }
         cout << "constructor execute" << endl;
-        cpp_array = new float[size];
+        arr_size = size;
+        cpp_array = new float[arr_size];
         for (int i = 0; i < size; i++) {
             cpp_array[i] = initValue;
         }
@@ -72,7 +74,7 @@ class CppArray {
 
 ostream& operator << (ostream& os, CppArray& cp2) {
     cout << "[";
-    for (int i = 0; i < cp2.arr_size; i++) {
+    for (int i = 0; i < cp2.arr_size; i++) {  
         os << cp2.cpp_array[i];
         if (i < cp2.arr_size-1) {
             os << ", ";
@@ -94,10 +96,10 @@ int main() {
     CppArray cp1;
     CppArray cp2(3, 3);
     cout << cp1.GetSize() << endl;
+    cout << cp1;
     cp1 = cp2;
     cout << cp1.GetSize() << endl;
     
-    cout << cp2;
     cout << cp2;
     try {
         cout << cp1[4] << endl;
