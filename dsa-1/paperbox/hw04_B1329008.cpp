@@ -76,7 +76,7 @@ int main () {
     
     while (temp1 != poly1_head) {
         ListNode* pBIG = poly_end;
-        temp2 = poly2_head -> next;
+        
         temp3 = poly_end;
         while (temp2 != poly2_head) {
             ListNode* multi = multiply(temp1, temp2);
@@ -84,7 +84,7 @@ int main () {
                 continue;
             }
             else if (poly_end -> next == poly_end) {
-                poly1_head -> next = multi;
+                poly_end -> next = multi;
                 multi -> next = poly1_head;
                 temp3 = multi;
             }
@@ -114,7 +114,7 @@ int main () {
                     pBIG = pBIG -> next;
                 }
             }
-            
+            temp2 = poly2_head -> next;
         }
         temp1 = temp1 -> next;
     }
