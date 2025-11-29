@@ -16,6 +16,7 @@ struct ListNode {
 ListNode* multiply (ListNode* poly1, ListNode* poly2) {
     ListNode* temp = new ListNode (poly1 -> coef * poly2 -> coef, poly1 -> exp + poly2 -> exp);
     if (temp -> coef == 0) {//防輸入係數0
+        delete temp;
         return nullptr;
     }
     else {
@@ -31,7 +32,6 @@ int main () {
     poly1_head -> next = poly1_head;
     ListNode* poly2_head = new ListNode(0, 0);
     poly2_head -> next = poly2_head;
-    ListNode* poly_temp_head = new ListNode(0, 0);//相乘後的暫存node
     ListNode* poly_end = new ListNode (0, 0);//最後答案的頭node
     poly_end -> next = poly_end;
 
@@ -69,52 +69,37 @@ int main () {
     ListNode* temp2;
     ListNode* temp_end = poly_end;
     ListNode* temp3;
+    
 
     temp1 = poly1_head -> next;
-    
-    
-    
     while (temp1 != poly1_head) {
-        ListNode* pBIG = poly_end;
-        
+        temp2 = poly2_head -> next;
         temp3 = poly_end;
         while (temp2 != poly2_head) {
             ListNode* multi = multiply(temp1, temp2);
             if (multi == nullptr) {
+                temp2 = temp2 -> next;
                 continue;
             }
-            else if (poly_end -> next == poly_end) {
-                poly_end -> next = multi;
-                multi -> next = poly1_head;
-                temp3 = multi;
+            ListNode* pBIG = poly_end;
+            ListNode* BIG = poly_end -> next;
+            while (BIG != poly_end && BIG -> exp > multi -> exp) {
+                pBIG = BIG;
+                BIG = BIG -> next;
             }
-            else if (multi -> exp > temp3 -> exp) {
+            if (BIG != poly_end && BIG -> exp == multi -> exp) { //找到且指數相等
+                BIG -> coef = BIG -> coef + multi -> coef;
+                if (BIG -> coef == 0) {
+                    pBIG -> next = BIG -> next;
+                    delete BIG;
+                }
+                delete multi;
+            }
+            else {
                 pBIG -> next = multi;
-                multi -> next = temp3;
-                temp3 = multi;
+                multi -> next = BIG;
             }
-            else if (multi -> exp == temp3 -> exp) {
-                int coef = multi -> coef + temp3 -> coef;
-                if (coef == 0) {
-                    pBIG -> next = temp3 -> next;
-                    ListNode* trash = temp3;
-                    temp3 = temp3 -> next;
-                    delete trash;
-                }
-                else {
-                    temp3 -> coef = coef;
-                }
-            }
-            else {//multi < temp3
-                if (temp3 -> next == poly_end) {
-                    temp3 -> next = multi;
-                }
-                else {
-                    temp3 = temp3 -> next;
-                    pBIG = pBIG -> next;
-                }
-            }
-            temp2 = poly2_head -> next;
+            temp2 = temp2 -> next;
         }
         temp1 = temp1 -> next;
     }
@@ -122,7 +107,12 @@ int main () {
     //for testing
     temp1 = poly_end -> next;
     while (temp1 != poly_end) {
-        cout << temp1 -> coef << "x^" << temp1 -> exp << "+";
+        if (temp1 -> next != poly_end) {
+            cout << temp1 -> coef << "x^" << temp1 -> exp << "+";
+        }
+        else {
+             cout << temp1 -> coef << "x^" << temp1 -> exp;
+        }
         temp1 = temp1 -> next;
     }
     
