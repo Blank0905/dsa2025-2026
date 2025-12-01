@@ -68,21 +68,22 @@ int main () {
 
     ListNode* temp2;
     ListNode* temp_end = poly_end;
-    ListNode* temp3;
-    
+    ListNode* temp3; 
 
     temp1 = poly1_head -> next;
     while (temp1 != poly1_head) {
         temp2 = poly2_head -> next;
         temp3 = poly_end;
+        ListNode* searchPtr = poly_end;
         while (temp2 != poly2_head) {
             ListNode* multi = multiply(temp1, temp2);
             if (multi == nullptr) {
+                delete multi;//係數是0刪掉空指標
                 temp2 = temp2 -> next;
                 continue;
             }
-            ListNode* pBIG = poly_end;
-            ListNode* BIG = poly_end -> next;
+            ListNode* pBIG = searchPtr;
+            ListNode* BIG = pBIG -> next;
             while (BIG != poly_end && BIG -> exp > multi -> exp) {
                 pBIG = BIG;
                 BIG = BIG -> next;
@@ -92,19 +93,21 @@ int main () {
                 if (BIG -> coef == 0) {
                     pBIG -> next = BIG -> next;
                     delete BIG;
+                    searchPtr = pBIG;
                 }
                 delete multi;
             }
             else {
                 pBIG -> next = multi;
                 multi -> next = BIG;
+                searchPtr = multi;
             }
             temp2 = temp2 -> next;
         }
         temp1 = temp1 -> next;
     }
 
-    //for testing
+     //for testing
     temp1 = poly_end -> next;
     while (temp1 != poly_end) {
         if (temp1 -> next != poly_end) {
@@ -115,7 +118,6 @@ int main () {
         }
         temp1 = temp1 -> next;
     }
-    
-    
+
     return 0;
 }
