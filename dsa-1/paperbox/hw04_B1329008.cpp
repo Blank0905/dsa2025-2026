@@ -32,8 +32,8 @@ int main () {
     poly1_head -> next = poly1_head;
     ListNode* poly2_head = new ListNode(0, 0);
     poly2_head -> next = poly2_head;
-    ListNode* poly_end = new ListNode (0, 0);//最後答案的頭node
-    poly_end -> next = poly_end;
+    ListNode* poly_Ans = new ListNode (0, 0);//最後答案的頭node
+    poly_Ans -> next = poly_Ans;
 
     cout << "cin term1\n";
     cin >> term1;
@@ -67,37 +67,39 @@ int main () {
     }
 
     ListNode* temp2;
-    ListNode* temp_end = poly_end;
+    ListNode* temp_end = poly_Ans;
     ListNode* temp3; 
 
     temp1 = poly1_head -> next;
     while (temp1 != poly1_head) {
         temp2 = poly2_head -> next;
-        temp3 = poly_end;
-        ListNode* searchPtr = poly_end;
+        temp3 = poly_Ans;
+        ListNode* searchPtr = poly_Ans;
         while (temp2 != poly2_head) {
             ListNode* multi = multiply(temp1, temp2);
             if (multi == nullptr) {
-                delete multi;//係數是0刪掉空指標
                 temp2 = temp2 -> next;
                 continue;
             }
             ListNode* pBIG = searchPtr;
             ListNode* BIG = pBIG -> next;
-            while (BIG != poly_end && BIG -> exp > multi -> exp) {
+            while (BIG != poly_Ans && BIG -> exp > multi -> exp) {//還沒找到的時候一直往後找，找到最後沒找到就往下，後面會直接接到最後面
                 pBIG = BIG;
                 BIG = BIG -> next;
             }
-            if (BIG != poly_end && BIG -> exp == multi -> exp) { //找到且指數相等
+            if (BIG != poly_Ans && BIG -> exp == multi -> exp) { //找到且已經有相同指數的項
                 BIG -> coef = BIG -> coef + multi -> coef;
                 if (BIG -> coef == 0) {
                     pBIG -> next = BIG -> next;
                     delete BIG;
                     searchPtr = pBIG;
                 }
+                else {
+                    searchPtr = BIG;
+                }
                 delete multi;
             }
-            else {
+            else {//找到他比目前BIG指標的指數還大，或是已經到最後了，都直接接到BIG的前面/這邊multi備插到答案裡了不用刪掉
                 pBIG -> next = multi;
                 multi -> next = BIG;
                 searchPtr = multi;
@@ -107,17 +109,59 @@ int main () {
         temp1 = temp1 -> next;
     }
 
-     //for testing
-    temp1 = poly_end -> next;
-    while (temp1 != poly_end) {
-        if (temp1 -> next != poly_end) {
-            cout << temp1 -> coef << "x^" << temp1 -> exp << "+";
+    //感恩gemini 讚嘆gemini
+    cout << "Result: ";
+    temp1 = poly_Ans -> next;
+    bool isFirst = true; // 用來判斷是不是第一項 (第一項的正號不用印)
+    
+    while (temp1 != poly_Ans) {
+        int c = temp1->coef;
+        int e = temp1->exp;
+        
+        // 1. 處理正負號與連接符
+        if (isFirst) {
+            // 第一項：如果是負的印負號，正的不用印符號
+            if (c < 0) cout << "-";
+        } else {
+            // 非第一項：正數印 " + "，負數印 " - "
+            if (c >= 0) cout << " + "; 
+            else cout << " - ";       
         }
+
+        // 2. 取得係數絕對值 (因為符號在上面印過了)
+        int absCoef = (c > 0) ? c : -c;
+
+        // 3. 處理係數與變數顯示
+        if (e == 0) {
+            // Case A: 指數為 0 (常數項)，例如 5x^0 -> 5
+            // 直接印數字，不印 x
+            cout << absCoef; 
+        } 
         else {
-             cout << temp1 -> coef << "x^" << temp1 -> exp;
+            // Case B: 指數不為 0
+            
+            // 如果係數不是 1，要印出來 (例如 3x)。
+            // 如果係數是 1 (例如 1x)，通常省略 1，只印 x (除非你想印 1x)
+            if (absCoef != 1) {
+                cout << absCoef;
+            }
+            
+            cout << "x";
+            
+            // 4. 處理指數顯示
+            // 如果指數不是 1，才印 ^n (例如 x^2)
+            // 如果指數是 1，不印 ^1 (例如 x^1 -> x)
+            if (e != 1) {
+                cout << "^" << e;
+            }
         }
+
+        isFirst = false;
         temp1 = temp1 -> next;
     }
+
+    if (isFirst) cout << "0"; // 如果結果是空的 (0)，印出 0
+    cout << endl;
 
     return 0;
 }
