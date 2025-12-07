@@ -109,8 +109,7 @@ int main () {
         temp1 = temp1 -> next;
     }
 
-    //感恩gemini 讚嘆gemini
-    cout << "Result: ";
+    cout << "Result: ";//列印結果
     temp1 = poly_Ans -> next;
     bool isFirst = true; // 用來判斷是不是第一項 (第一項的正號不用印)
     

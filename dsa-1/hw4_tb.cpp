@@ -18,7 +18,7 @@ struct ListNode {
     }
 };
 
-// 將多項式操作封裝成類別，方便管理和重複測試
+// 將多項式操作封裝成類別
 class Polynomial {
 private:
     ListNode* head; // Circular linked list 的頭節點 (Dummy head)
@@ -29,7 +29,7 @@ public:
         head->next = head; // Circular
     }
 
-    // 解構子：清除記憶體 (重要！否則實驗跑多次會記憶體不足)
+    // 解構子：清除記憶體
     ~Polynomial() {
         clear();
         delete head;
@@ -45,95 +45,99 @@ public:
         head->next = head;
     }
 
-    // 取得 head (為了相容你的寫法)
+    // 取得 head
     ListNode* getHead() const { return head; }
 
-    // 加入一項 (用於生成測試資料)
-    // 這裡我們簡單做，假設生成時已經排好序，直接加在 head->next (因為是降冪，新生成的較小指數往後插會比較慢，這裡為了生成速度簡化)
-    // 更好的生成方式是直接串接，但為了模擬亂數插入，我們使用你的 insert 邏輯的簡化版
+    // 加入一項 (插在 dummy head 後面)
     void addTerm(int coef, int exp) {
         ListNode* newNode = new ListNode(coef, exp);
-        // 直接插在 dummy head 後面 (測試資料生成順序若為升冪，這樣插就會變成降冪)
         newNode->next = head->next;
         head->next = newNode;
     }
     
-    // 用於生成 Dense 測試資料 (指數連續)
+    // 生成 Dense 測試資料 (指數連續 0 ~ terms-1)
     void generateDense(int terms) {
         clear();
-        // 生成 x^0, x^1, ..., x^(terms-1)
-        // 依序插入 head 後面，鏈結串列會變成 x^(terms-1) -> ... -> x^0 (降冪)
         for (int i = 0; i < terms; i++) {
-            addTerm(1, i); // 係數設為 1
+            addTerm(1, i); 
         }
     }
 
-    // 用於生成 Non-dense 測試資料 (指數隨機分散)
+    // 生成 Sparse 測試資料 (指數隨機分散)
     void generateSparse(int terms) {
         clear();
         vector<int> exps;
         int currentExp = 0;
-        // 隨機間隔產生指數
         for (int i = 0; i < terms; i++) {
-            currentExp += (rand() % 1000) + 1; // 間隔 1~100
+            currentExp += (rand() % 901 + 100) + 1; // 間隔 100~1000
             exps.push_back(currentExp);
         }
-        // 因為 addTerm 是插在 head 後面，所以我們由小到大把指數插進去，
-        // List 就會變成由大到小 (降冪)
+        // 由於 addTerm 是插頭，這裡依序插入會變成降冪排列
         for (int e : exps) {
             addTerm(1, e);
         }
     }
 
-    // 你的乘法邏輯 (封裝在內部)
-    // 回傳一個新的 Polynomial 物件
+    // 核心乘法邏輯 (已優化記憶體操作)
     Polynomial multiply(const Polynomial& other) {
         Polynomial result;
-        ListNode* poly_end = result.getHead(); // 你的 poly_end 其實就是 result 的 dummy head
+        ListNode* poly_end = result.getHead(); // result 的 dummy head
         
         ListNode* poly1_head = this->head;
         ListNode* poly2_head = other.head;
 
         ListNode* temp1 = poly1_head->next;
         
-        // 你的核心邏輯開始 -------------------------------------------
+        // 外層迴圈：遍歷 A
         while (temp1 != poly1_head) {
             ListNode* temp2 = poly2_head->next;
-            ListNode* searchPtr = poly_end;
+            
+            // searchPtr 在這裡重置 (針對每一個 A 的項次，重頭開始找 Result 的插入點)
+            // 但在內層迴圈跑 B 的時候，因為降冪特性，不需要回頭
+            ListNode* searchPtr = poly_end; 
+
+            // 內層迴圈：遍歷 B
             while (temp2 != poly2_head) {
                 
-                // 計算係數與指數
                 int newCoef = temp1->coef * temp2->coef;
                 int newExp = temp1->exp + temp2->exp;
 
-                if (newCoef != 0) { // 係數不為0才處理
-                    ListNode* multi = new ListNode(newCoef, newExp);
-
-                    // 尋找插入位置
+                if (newCoef != 0) {
+                    // 【優化重點】：這裡先不 new ListNode，避免合併時浪費記憶體操作
+                    
                     ListNode* pBIG = searchPtr;
                     ListNode* BIG = searchPtr->next;
 
-                    // [優化提示]：這裡每次都從頭找，是導致 O(m^2n) 的主因
-                    while (BIG != poly_end && BIG->exp > multi->exp) {
+                    // 尋找插入位置 (利用整數比較，速度快)
+                    // 由於 searchPtr 記住了上次的位置，這裡通常只需要比較很少次
+                    while (BIG != poly_end && BIG->exp > newExp) {
                         pBIG = BIG;
                         BIG = BIG->next;
                     }
 
-                    if (BIG != poly_end && BIG->exp == multi->exp) { // 指數相等，合併
-                        BIG->coef += multi->coef;
+                    if (BIG != poly_end && BIG->exp == newExp) {
+                        // --- 情境 A: 指數相同 -> 合併 ---
+                        // 完全不需要 new 節點，直接改數值
+                        BIG->coef += newCoef;
+                        
                         if (BIG->coef == 0) {
+                            // 係數抵銷為 0，刪除節點
                             pBIG->next = BIG->next;
                             delete BIG;
-                            // 注意：這時 BIG 已經被刪除了，下次迴圈使用 BIG 可能會有問題？
-                            // 幸好你的邏輯是繼續跑 temp2，不會再用到 BIG，但在這裡 BIG 變成懸空指標
-                            searchPtr = pBIG; // 修正指標以防萬一
+                            // 刪除後，指標退回前一個安全點
+                            searchPtr = pBIG; 
                         } else {
+                            // 沒抵銷，指標停在當前點
                             searchPtr = BIG;
                         }
-                        delete multi;
-                    } else { // 沒找到，插入
+                    } else {
+                        // --- 情境 B: 指數不同 -> 插入 ---
+                        // 確定要插入了，才執行 new (Lazy Allocation)
+                        ListNode* multi = new ListNode(newCoef, newExp);
                         pBIG->next = multi;
                         multi->next = BIG;
+                        
+                        // 更新指標到新插入的點，下次從這繼續往後
                         searchPtr = multi;
                     }
                 }
@@ -141,55 +145,44 @@ public:
             }
             temp1 = temp1->next;
         }
-        // 你的核心邏輯結束 -------------------------------------------
         
         return result;
     }
 };
 
 int main() {
-    srand(time(0)); // 設定隨機種子
+    srand(time(0)); 
 
     int m = 100; // 固定 m
-    vector<int> n_list = {10, 100, 500, 1000, 2000}; // 測試不同的 n
+    vector<int> n_list = {10, 50, 100, 200, 300, 400, 600, 800, 1000, 1200}; 
+    
+    int num_runs = 5; 
 
-    cout << "=== 實驗 1: Dense (稠密) 多項式 ===" << endl;
-    cout << "m \t n \t Time(microseconds)" << endl;
-
-    for (int n : n_list) {
-        Polynomial A, B;
-        A.generateDense(m);
-        B.generateDense(n);
-
-        // 開始計時
-        auto start = chrono::high_resolution_clock::now();
-
-        Polynomial C = A.multiply(B);
-
-        // 結束計時
-        auto end = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-
-        cout << m << " \t " << n << " \t " << duration.count() << endl;
-    }
-
-    cout << "\n=== 實驗 2: Non-dense (稀疏) 多項式 ===" << endl;
-    cout << "m \t n \t Time(microseconds)" << endl;
+    cout << "=== 實驗 1: Dense (稠密) 多項式 (平均 " << num_runs << " 次) ===" << endl;
+    cout << "m \t n \t Avg_Time(microseconds)" << endl;
 
     for (int n : n_list) {
-        Polynomial A, B;
-        A.generateSparse(m);
-        B.generateSparse(n);
+        long long total_time = 0;
 
-        auto start = chrono::high_resolution_clock::now();
+        for (int k = 0; k < num_runs; k++) {
+            Polynomial A, B;
+            A.generateDense(m);
+            B.generateDense(n);
 
-        Polynomial C = A.multiply(B);
+            auto start = chrono::high_resolution_clock::now();
 
-        auto end = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+            Polynomial C = A.multiply(B);
 
-        cout << m << " \t " << n << " \t " << duration.count() << endl;
+            auto end = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+            
+            total_time += duration.count();
+        }
+
+        cout << m << " \t " << n << " \t " << (total_time / num_runs) << endl;
     }
+
+
 
     return 0;
 }
