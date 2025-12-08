@@ -68,7 +68,8 @@ int main () {
 
     ListNode* temp2;
     ListNode* temp_end = poly_Ans;
-    ListNode* temp3; 
+    ListNode* temp3;
+    
 
     temp1 = poly1_head -> next;
     while (temp1 != poly1_head) {

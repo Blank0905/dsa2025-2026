@@ -63,13 +63,15 @@ public:
         }
     }
 
+    
+
     // 生成 Sparse 測試資料 (指數隨機分散)
     void generateSparse(int terms) {
         clear();
         vector<int> exps;
         int currentExp = 0;
         for (int i = 0; i < terms; i++) {
-            currentExp += (rand() % 901 + 100) + 1; // 間隔 100~1000
+            currentExp += (rand() % 100000); // 間隔 100~1000
             exps.push_back(currentExp);
         }
         // 由於 addTerm 是插頭，這裡依序插入會變成降冪排列
@@ -78,7 +80,7 @@ public:
         }
     }
 
-    // 核心乘法邏輯 (已優化記憶體操作)
+    // 核心乘法邏輯
     Polynomial multiply(const Polynomial& other) {
         Polynomial result;
         ListNode* poly_end = result.getHead(); // result 的 dummy head
@@ -148,13 +150,47 @@ public:
         
         return result;
     }
+
+    Polynomial multiplyNaive(const Polynomial& other) const {
+        Polynomial result;
+        ListNode* resHead = result.getHead();
+    
+        for (ListNode* a = head->next; a != head; a = a->next) {
+            for (ListNode* b = other.head->next; b != other.head; b = b->next) {
+                int newCoef = a->coef * b->coef;
+                int newExp = a->exp + b->exp;
+                if (newCoef == 0) continue;
+    
+                // 從頭開始掃（每一對 (a,b) 都從 dummy head 開始）
+                ListNode* p = resHead;
+                ListNode* cur = p->next;
+                while (cur != resHead && cur->exp > newExp) {
+                    p = cur;
+                    cur = cur->next;
+                }
+    
+                if (cur != resHead && cur->exp == newExp) {
+                    cur->coef += newCoef;
+                    if (cur->coef == 0) {
+                        p->next = cur->next;
+                        delete cur;
+                    }
+                } else {
+                    ListNode* node = new ListNode(newCoef, newExp);
+                    p->next = node;
+                    node->next = cur;
+                }
+            }
+        }
+        return result;
+    }
 };
 
 int main() {
     srand(time(0)); 
 
     int m = 100; // 固定 m
-    vector<int> n_list = {10, 50, 100, 200, 300, 400, 600, 800, 1000, 1200}; 
+    vector<int> n_list = {10, 50, 100, 200, 300, 400, 600, 800, 1000, 1200, 2000, 3000}; 
     
     int num_runs = 5; 
 
@@ -183,6 +219,28 @@ int main() {
     }
 
 
+    cout << "=== 實驗 2: Non Dense (稀疏) 多項式 (平均 " << num_runs << " 次) ===" << endl;
+    cout << "m \t n \t Avg_Time(microseconds)" << endl;
+
+    for (int n : n_list) {
+        long long total_time = 0;
+        for (int k = 0; k < num_runs; k++) {
+            Polynomial A, B;
+            A.generateSparse(m);
+            B.generateSparse(n);
+
+            auto start = chrono::high_resolution_clock::now();
+
+            Polynomial C = A.multiplyNaive(B);
+
+            auto end = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+                
+            total_time += duration.count();
+        }
+        
+        cout << m << " \t " << n << " \t " << (total_time/num_runs) << endl;
+    }
 
     return 0;
 }

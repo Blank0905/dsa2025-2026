@@ -63,14 +63,9 @@ public:
         }
     }
 
-    // 快速插入 (僅限於已知 exp 是目前最小的情況，用於從 Array 轉回 List)
+    // 快速插入 (用於從 Array 轉回 List)
     void appendTerm(float coef, int exp) {
-        if (coef == 0) return;
-        // 因為我們是從大到小遍歷 Array，所以只要一直插在 head->next 即可? 
-        // 不，List 是大到小，所以我們應該插在 "最後面"。
-        // 但為了效率，我們可以在遍歷 Array 時「由小到大」掃描，然後一直插在 head->next (頭插法)，
-        // 這樣最後 List 就會是「由大到小」。
-        
+        //if (coef == 0) return;
         Node* newNode = new Node;
         newNode->coef = coef;
         newNode->exp = exp;
