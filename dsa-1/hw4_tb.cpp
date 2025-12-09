@@ -4,6 +4,9 @@
 #include <random>   // 用於隨機生成
 #include <algorithm> // 用於 sort
 
+#include<random>
+#include<set>
+
 using namespace std;
 
 // 定義節點結構
@@ -25,15 +28,15 @@ private:
 
 public:
     Polynomial() {
-        head = new ListNode(0, 0); // Dummy node
+        head = new ListNode(0, 0);
         head->next = head; // Circular
     }
 
-    // 解構子：清除記憶體
-    ~Polynomial() {
+    // 解構子：清除記憶體，但這東西超花時間
+    /*~Polynomial() {
         clear();
         delete head;
-    }
+    }*/
 
     void clear() {
         ListNode* current = head->next;
@@ -44,9 +47,6 @@ public:
         }
         head->next = head;
     }
-
-    // 取得 head
-    ListNode* getHead() const { return head; }
 
     // 加入一項 (插在 dummy head 後面)
     void addTerm(int coef, int exp) {
@@ -63,122 +63,50 @@ public:
         }
     }
 
-    
-
-    // 生成 Sparse 測試資料 (指數隨機分散)
-    void generateSparse(int terms) {
+    void generateSparse(int terms, std::mt19937& rng) {
         clear();
-        vector<int> exps;
+        std::uniform_int_distribution<int> dist(1, 1000);
         int currentExp = 0;
-        for (int i = 0; i < terms; i++) {
-            currentExp += (rand() % 100000); // 間隔 100~1000
-            exps.push_back(currentExp);
-        }
-        // 由於 addTerm 是插頭，這裡依序插入會變成降冪排列
-        for (int e : exps) {
-            addTerm(1, e);
+        for (int i = 0; i < terms; ++i) {
+            currentExp += dist(rng); // 確保嚴格遞增
+            addTerm(1, currentExp);
         }
     }
 
     // 核心乘法邏輯
     Polynomial multiply(const Polynomial& other) {
         Polynomial result;
-        ListNode* poly_end = result.getHead(); // result 的 dummy head
-        
-        ListNode* poly1_head = this->head;
-        ListNode* poly2_head = other.head;
-
-        ListNode* temp1 = poly1_head->next;
-        
-        // 外層迴圈：遍歷 A
-        while (temp1 != poly1_head) {
-            ListNode* temp2 = poly2_head->next;
-            
-            // searchPtr 在這裡重置 (針對每一個 A 的項次，重頭開始找 Result 的插入點)
-            // 但在內層迴圈跑 B 的時候，因為降冪特性，不需要回頭
-            ListNode* searchPtr = poly_end; 
-
-            // 內層迴圈：遍歷 B
-            while (temp2 != poly2_head) {
-                
-                int newCoef = temp1->coef * temp2->coef;
-                int newExp = temp1->exp + temp2->exp;
-
-                if (newCoef != 0) {
-                    // 【優化重點】：這裡先不 new ListNode，避免合併時浪費記憶體操作
-                    
-                    ListNode* pBIG = searchPtr;
-                    ListNode* BIG = searchPtr->next;
-
-                    // 尋找插入位置 (利用整數比較，速度快)
-                    // 由於 searchPtr 記住了上次的位置，這裡通常只需要比較很少次
-                    while (BIG != poly_end && BIG->exp > newExp) {
-                        pBIG = BIG;
-                        BIG = BIG->next;
-                    }
-
-                    if (BIG != poly_end && BIG->exp == newExp) {
-                        // --- 情境 A: 指數相同 -> 合併 ---
-                        // 完全不需要 new 節點，直接改數值
-                        BIG->coef += newCoef;
-                        
-                        if (BIG->coef == 0) {
-                            // 係數抵銷為 0，刪除節點
-                            pBIG->next = BIG->next;
-                            delete BIG;
-                            // 刪除後，指標退回前一個安全點
-                            searchPtr = pBIG; 
-                        } else {
-                            // 沒抵銷，指標停在當前點
-                            searchPtr = BIG;
-                        }
-                    } else {
-                        // --- 情境 B: 指數不同 -> 插入 ---
-                        // 確定要插入了，才執行 new (Lazy Allocation)
-                        ListNode* multi = new ListNode(newCoef, newExp);
-                        pBIG->next = multi;
-                        multi->next = BIG;
-                        
-                        // 更新指標到新插入的點，下次從這繼續往後
-                        searchPtr = multi;
-                    }
-                }
-                temp2 = temp2->next;
-            }
-            temp1 = temp1->next;
-        }
-        
-        return result;
-    }
-
-    Polynomial multiplyNaive(const Polynomial& other) const {
-        Polynomial result;
-        ListNode* resHead = result.getHead();
-    
-        for (ListNode* a = head->next; a != head; a = a->next) {
+        for(ListNode* a = head -> next; a != head ; a = a->next) {//遍歷A多項式
+            ListNode* searchPtr = result.head;//讓相同的A在乘不同的B的時候不用每次都從頭乘
             for (ListNode* b = other.head->next; b != other.head; b = b->next) {
                 int newCoef = a->coef * b->coef;
                 int newExp = a->exp + b->exp;
-                if (newCoef == 0) continue;
-    
-                // 從頭開始掃（每一對 (a,b) 都從 dummy head 開始）
-                ListNode* p = resHead;
-                ListNode* cur = p->next;
-                while (cur != resHead && cur->exp > newExp) {
-                    p = cur;
-                    cur = cur->next;
+                if (newCoef == 0) {continue;}
+
+                ListNode* BIG = searchPtr->next;
+                ListNode* pBIG = searchPtr;
+
+                while(BIG != result.head && BIG->exp > newExp) {
+                    pBIG = BIG;
+                    BIG = BIG->next;
                 }
-    
-                if (cur != resHead && cur->exp == newExp) {
-                    cur->coef += newCoef;
-                    if (cur->coef == 0) {
-                        p->next = cur->next;
-                        delete cur;
+                if(BIG != result.head && BIG->exp == newExp) {
+                    BIG->coef+=newCoef;
+                    if(BIG->coef==0) {
+                        pBIG->next = BIG->next;
+                        delete BIG;
+                        searchPtr = pBIG;
                     }
-                } else {
-                    ListNode* node = new ListNode(newCoef, newExp);
-                    p->next = node;
-                    node->next = cur;
+                    else {
+                        // 沒抵銷，指標停在當前點
+                        searchPtr = BIG;
+                    }
+                }
+                else {
+                    ListNode* newNode = new ListNode(newCoef, newExp);
+                    newNode->next = BIG;//circular
+                    pBIG->next = newNode;
+                    searchPtr = newNode;
                 }
             }
         }
@@ -187,31 +115,31 @@ public:
 };
 
 int main() {
-    srand(time(0)); 
+    random_device rd;
+    mt19937 rng(rd());
 
     int m = 100; // 固定 m
     vector<int> n_list = {10, 50, 100, 200, 300, 400, 600, 800, 1000, 1200, 2000, 3000}; 
     
-    int num_runs = 5; 
+    int num_runs = 10; 
 
     cout << "=== 實驗 1: Dense (稠密) 多項式 (平均 " << num_runs << " 次) ===" << endl;
     cout << "m \t n \t Avg_Time(microseconds)" << endl;
 
     for (int n : n_list) {
-        long long total_time = 0;
-
+        double total_time = 0.0f;
+        Polynomial A, B;
+        A.generateDense(m);
+        B.generateDense(n);
         for (int k = 0; k < num_runs; k++) {
-            Polynomial A, B;
-            A.generateDense(m);
-            B.generateDense(n);
-
+            
             auto start = chrono::high_resolution_clock::now();
 
             Polynomial C = A.multiply(B);
-
+            
             auto end = chrono::high_resolution_clock::now();
             auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-            
+
             total_time += duration.count();
         }
 
@@ -226,16 +154,16 @@ int main() {
         long long total_time = 0;
         for (int k = 0; k < num_runs; k++) {
             Polynomial A, B;
-            A.generateSparse(m);
-            B.generateSparse(n);
+            A.generateSparse(m, rng);
+            B.generateSparse(n, rng);
 
             auto start = chrono::high_resolution_clock::now();
 
-            Polynomial C = A.multiplyNaive(B);
+            Polynomial C = A.multiply(B);
 
-            auto end = chrono::high_resolution_clock::now();
+            auto end = chrono::high_resolution_clock::now();    
             auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-                
+
             total_time += duration.count();
         }
         

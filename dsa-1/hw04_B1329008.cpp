@@ -66,30 +66,30 @@ int main () {
         temp1 = poly2;
     }
 
-    ListNode* temp2;
-    ListNode* temp_end = poly_Ans;
-    ListNode* temp3;
-    
 
+    
     temp1 = poly1_head -> next;
     while (temp1 != poly1_head) {
-        temp2 = poly2_head -> next;
-        temp3 = poly_Ans;
+        ListNode* temp2 = poly2_head -> next;
         ListNode* searchPtr = poly_Ans;
         while (temp2 != poly2_head) {
-            ListNode* multi = multiply(temp1, temp2);
-            if (multi == nullptr) {
+            int newCoef = temp1->coef * temp2->coef;
+            int newExp = temp1->exp + temp2->exp;
+            
+            //ListNode* multi = multiply(temp1, temp2);
+
+            if (newCoef == 0) {
                 temp2 = temp2 -> next;
                 continue;
             }
             ListNode* pBIG = searchPtr;
             ListNode* BIG = pBIG -> next;
-            while (BIG != poly_Ans && BIG -> exp > multi -> exp) {//還沒找到的時候一直往後找，找到最後沒找到就往下，後面會直接接到最後面
+            while (BIG != poly_Ans && BIG -> exp > newExp) {//還沒找到的時候一直往後找，找到最後沒找到就往下，後面會直接接到最後面
                 pBIG = BIG;
                 BIG = BIG -> next;
             }
-            if (BIG != poly_Ans && BIG -> exp == multi -> exp) { //找到且已經有相同指數的項
-                BIG -> coef = BIG -> coef + multi -> coef;
+            if (BIG != poly_Ans && BIG -> exp == newExp) { //找到且已經有相同指數的項
+                BIG -> coef = BIG -> coef + newCoef;
                 if (BIG -> coef == 0) {
                     pBIG -> next = BIG -> next;
                     delete BIG;
@@ -98,9 +98,9 @@ int main () {
                 else {
                     searchPtr = BIG;
                 }
-                delete multi;
             }
             else {//找到他比目前BIG指標的指數還大，或是已經到最後了，都直接接到BIG的前面/這邊multi備插到答案裡了不用刪掉
+                ListNode* multi = new ListNode(newCoef, newExp);
                 pBIG -> next = multi;
                 multi -> next = BIG;
                 searchPtr = multi;

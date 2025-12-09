@@ -40,7 +40,7 @@ public:
     }
 
     // 通用的插入函式 (會有搜尋時間，適用於 Sparse 或建立初始資料)
-    void insertTerm(float coef, int exp) {
+    void insertTerm(int coef, int exp) {
         if (coef == 0) return;
         Node* prev = head;
         Node* curr = head->next;
@@ -82,7 +82,7 @@ public:
     void generateDense(int n) {
         clear();
         for (int i = 0; i < n; i++) {
-            insertTerm(1.0f, i); 
+            insertTerm(1, i); 
         }
     }
 
@@ -126,10 +126,10 @@ public:
 
 int main() {
     // 改動 1: 把 m 加大，讓計算量變大，避免時間太短測不到
-    int fixed_m = 500; 
+    int fixed_m = 100; 
     
     // 改動 2: n 的範圍調整
-    vector<int> n_values = {10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200}; 
+    vector<int> n_values = {50, 100, 200, 300, 400, 500, 800, 1000}; 
 
     cout << "=== Polynomial Multiplication Efficiency Test (Averaged) ===" << endl;
     cout << "Fixed m = " << fixed_m << endl << endl;
@@ -143,8 +143,8 @@ int main() {
 
     for (int n : n_values) {
         Polynomial A, B;
-        A.generateDense(n);
-        B.generateDense(fixed_m);
+        A.generateDense(fixed_m);
+        B.generateDense(n);
 
         // 預熱 (Warm up)：先跑一次讓 CPU 喚醒，不算時間
         Polynomial temp = Polynomial::multiplyDenseOptimized(A, B);
@@ -153,7 +153,7 @@ int main() {
         
         // 改動 3: 每個 n 跑 100 次
         for(int k=0; k < repeat_count; k++) {
-             Polynomial C = Polynomial::multiplyDenseOptimized(A, B);
+            Polynomial C = Polynomial::multiplyDenseOptimized(A, B);
         }
         
         auto end = chrono::high_resolution_clock::now();
