@@ -1,185 +1,157 @@
-#include<iostream>
-#include<cstdlib>
-#include<ctime>
-#include<chrono>
-#include<algorithm>
-#include<vector>
-#include<random>
-#include<set>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <cstring>
+#include <algorithm>
+#include <random>
+#include <cstdlib>
+#include <chrono>
 using namespace std;
 
-struct Node{
+class node{
+    public:
     int coef;
     int exp;
-    Node *next;
-    Node(int c=0,int e=0){
+    node* next = nullptr;
+    node(int c, int e){
         coef = c;
         exp = e;
-        next = nullptr;
     }
 };
 
 class poly{
-public:
-    Node *head;
+    private:
 
+    public:
+    node* header = new node(0,-1);  
+    node* last = header;
     poly(){
-        head = new Node();
-        head->next = head;
+        header->next = header;
+        
     }
-
-    ~poly () {
-        clear();
-        delete head;
-    }
-
-    void clear() {
-        Node* current = head->next;
-        while (current != head) {
-            Node* temp = current;
-            current = current->next;
-            delete temp;
+    ~poly(){
+        node* temp;
+        for(node* n = header->next;n!=header;n = temp){
+            temp = n->next;
+            delete n;
         }
-        head->next = head;
+        delete header;
     }
 
-
-
-    poly multi(poly& poly1){
-         poly result;
-            for(Node *p=head->next;p!=head;p=p->next){
-                Node* pos=result.head;
-                for(Node *q=poly1.head->next;q!=poly1.head;q=q->next){
-                    int c = p->coef*q->coef;
-                    int e = p->exp+q->exp;
-                    Node *pre = pos;
-                    Node *current =pos->next;       
-                    while(current!=result.head && current->exp>e){
-                        pre=current;
-                        current=current->next;
-                    }
-                    if(current !=result.head && current->exp==e){
-                        current->coef+=c;
-                        if(current->coef==0){
-                            pre->next=current->next;
-                            delete current;
-                            pos=pre;
-                        }
-                        else{
-                            pos=current;
-                        }
-                        continue;
-                    }
-
-                    Node *node =new Node(c,e);
-                    pre->next=node;
-                    node->next=current;
-                    pos=node;
-                }
+    void generateRand(int terms,bool dense){
+        vector<int> exps;
+        if(dense){
+            for(int i = terms-1;i>=0;i--){
+                exps.push_back(i);
             }
-            return result;
+        }
+        else{
+            for(int i = 0;i < terms;i++){
+                int e;
+                do{
+                    e = rand() % terms*50;
+                }while(find(exps.begin(),exps.end(), e) != exps.end());
+                exps.push_back(e);
+            }
+        }
+        for(int i : exps){
+            add_term(1,i,nullptr);
+        }
     }
+
+    node* add_term(int coef,int exp,node* start){
+        
+        if(start == nullptr){
+            node* n = new node(coef,exp);
+            last->next = n;
+            last = n;
+            n->next = header;
+            return nullptr;
+        }
+
+        node* prev = start;
+        node* cur = start->next;
+        while(cur != header && cur->exp > exp){
+            prev = cur;
+            cur = cur->next;                
+        }
+        if(cur!=header && cur->exp == exp){
+            cur->coef+=coef;
+            
+        }
+        else{
+            node* n = new node(coef,exp);
+            n->next = cur;
+            cur = n;
+            prev->next = n;
+            
+            if(cur == header){
+                last = n;
+            }
+            return n;
+        }
+        return cur;
+
+    }
+
 };
 
-
-
-int randomInt(int l, int r){
-    return l + rand() % (r - l + 1);
-}
-
-
-void generateNonDensePoly(poly &p, int size){
-    std::set<int> exps;
-    int range = size * 10;
-
-    while(exps.size() < size){
-        exps.insert(rand() % range);
-    }
-
-    Node *cur = p.head;
-    for(auto it = exps.rbegin(); it != exps.rend(); ++it){
-        Node *node = new Node(1, *it);
-        cur->next = node;
-        node->next = p.head;
-        cur = node;
-    }
-}
-
-
-void generateDensePoly(poly &p, int size){
-    int maxExp = randomInt(size, size + 1000);
-    Node *cur = p.head;
-
-    for(int i = 0; i < size; i++){
-        Node *node = new Node(1, maxExp - i);
-        cur->next = node;
-        node->next = p.head;
-        cur = node;
-    }
-}
-
-
-
 int main(){
-    srand(time(NULL));
+    // vector<int> x = {10,50,100,200,300,400,500,600,700,800,900,1000,1200};
+    vector<int> x;
+    for(int i = 0;i<=1000;i+=15){
+        x.push_back(i);
+    }
+    int m = 100;
+    bool danse = true;
 
-    int m = 100;      
-    int repeat = 300; 
+    for(int n :x){
+        double total_time = 0;
+        for(int j = 0;j<1000;j++){
+            clock_t start_time,end_time;
+            double this_time;
+            
+            poly* a = new poly;
+            poly* b = new poly;
+            poly* c = new poly;
+            a->generateRand(n,danse);
+            b->generateRand(m,danse);
+            
+            start_time = clock();
+            // auto start = chrono::high_resolution_clock::now();
+            for(node* a_cur = a->header->next;a_cur!=a->header;a_cur = a_cur->next){
 
+                node* c_cur = c->header;
+                for(node* b_cur = b->header->next;b_cur!=b->header;b_cur = b_cur->next){
+                    int coef = a_cur->coef*b_cur->coef;
+                    int e = a_cur->exp+b_cur->exp;
+                    c_cur = c->add_term(coef,e,c_cur);
+                }
+            
+                
+            }
+            end_time = clock();
+            // auto end = chrono::high_resolution_clock::now();
+            // for(node* c_cur = c.header->next;c_cur!=c.header;c_cur = c_cur->next){
+            //     cout<<c_cur->coef<<"x^"<<c_cur->exp;
+            //     if(c_cur->next!=c.header) cout<<"+";
+            // }
+            this_time = (double)(end_time - start_time)/CLOCKS_PER_SEC;
+            total_time += this_time;
+            delete a;
+            delete b;
+            delete c;
+            
+
+            // auto total_time = chrono::duration_cast<chrono::microseconds>(end - start);
+            
+        }
+        total_time/=1000;
+        // cout<<"n = "<<n<<" || time = "<<total_time<<"\n";
+        cout<<total_time<<"\n";
+    }
+    for(int i:x){
+        cout<<i<<"\n";
+    }
     
-    const int tn = 2000 / 200;   
-    int testN[tn];
-    for(int i = 0; i < tn; i++){
-        testN[i] = (i + 1) * 200;
-    }
-
-    cout << "m = " << m << endl;
-
-
-    cout << "\nNon-Dense\n";
-    cout << "n\tAvg Time(ms)\n";
-
-    for(int k = 0; k < tn; k++){
-        int n = testN[k];
-        double total = 0;
-
-        for(int r = 0; r < repeat; r++){
-            poly a, b;
-            generateNonDensePoly(a, m);
-            generateNonDensePoly(b, n);
-
-            auto s = chrono::high_resolution_clock::now();
-            poly c = a.multi(b);
-            auto e = chrono::high_resolution_clock::now();
-
-            total += chrono::duration<double, milli>(e - s).count();
-        }
-
-        cout << n << "\t" << total / repeat << endl;
-    }
-
-
-    cout << "\nDense\n";
-    cout << "n\tAvg Time(ms)\n";
-
-    for(int k = 0; k < tn; k++){
-        int n = testN[k];
-        double total = 0;
-
-        for(int r = 0; r < repeat; r++){
-            poly a, b;
-            generateDensePoly(a, m);
-            generateDensePoly(b, n);
-
-            auto s = chrono::high_resolution_clock::now();
-            poly c = a.multi(b);
-            auto e = chrono::high_resolution_clock::now();
-
-            total += chrono::duration<double, milli>(e - s).count();
-        }
-
-        cout << n << "\t" << total / repeat << endl;
-    }
-
-    return 0;
 }

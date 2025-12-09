@@ -1,15 +1,13 @@
 #include <iostream>
 #include <vector>
-#include <chrono>   // 用於計算時間
-#include <random>   // 用於隨機生成
-#include <algorithm> // 用於 sort
-
-#include<random>
-#include<set>
+#include <chrono>
+#include <random>
+#include <algorithm>
+#include <ctime>
+#include <cstdlib>
 
 using namespace std;
 
-// 定義節點結構
 struct ListNode {
     int coef;
     int exp;
@@ -32,21 +30,15 @@ public:
         head->next = head; // Circular
     }
 
-    // 解構子：清除記憶體，但這東西超花時間
-    /*~Polynomial() {
-        clear();
+   /* ~Polynomial() {
+        ListNode* t = head->next;
+        while (t != head) {
+            ListNode* t2 = t->next;
+            delete t;
+            t = t2;
+        }
         delete head;
     }*/
-
-    void clear() {
-        ListNode* current = head->next;
-        while (current != head) {
-            ListNode* temp = current;
-            current = current->next;
-            delete temp;
-        }
-        head->next = head;
-    }
 
     // 加入一項 (插在 dummy head 後面)
     void addTerm(int coef, int exp) {
@@ -57,23 +49,19 @@ public:
     
     // 生成 Dense 測試資料 (指數連續 0 ~ terms-1)
     void generateDense(int terms) {
-        clear();
         for (int i = 0; i < terms; i++) {
             addTerm(1, i); 
         }
     }
 
-    void generateSparse(int terms, std::mt19937& rng) {
-        clear();
-        std::uniform_int_distribution<int> dist(1, 1000);
+    void generateSparse(int terms) {
         int currentExp = 0;
         for (int i = 0; i < terms; ++i) {
-            currentExp += dist(rng); // 確保嚴格遞增
+            currentExp += (rand() %100000) +10; // 確保嚴格遞增
             addTerm(1, currentExp);
         }
     }
 
-    // 核心乘法邏輯
     Polynomial multiply(const Polynomial& other) {
         Polynomial result;
         for(ListNode* a = head -> next; a != head ; a = a->next) {//遍歷A多項式
@@ -115,11 +103,10 @@ public:
 };
 
 int main() {
-    random_device rd;
-    mt19937 rng(rd());
+    srand(time(0));
 
     int m = 100; // 固定 m
-    vector<int> n_list = {10, 50, 100, 200, 300, 400, 600, 800, 1000, 1200, 2000, 3000}; 
+    vector<int> n_list = {10, 50, 100, 200, 300, 400, 500, 600, 800, 1000, 1200, 1500, 2000}; 
     
     int num_runs = 10; 
 
@@ -127,11 +114,11 @@ int main() {
     cout << "m \t n \t Avg_Time(microseconds)" << endl;
 
     for (int n : n_list) {
-        double total_time = 0.0f;
-        Polynomial A, B;
-        A.generateDense(m);
-        B.generateDense(n);
+        double total_time = 0;
         for (int k = 0; k < num_runs; k++) {
+            Polynomial A, B;
+            A.generateDense(m);
+            B.generateDense(n);
             
             auto start = chrono::high_resolution_clock::now();
 
@@ -151,11 +138,11 @@ int main() {
     cout << "m \t n \t Avg_Time(microseconds)" << endl;
 
     for (int n : n_list) {
-        long long total_time = 0;
+        double total_time = 0;
         for (int k = 0; k < num_runs; k++) {
             Polynomial A, B;
-            A.generateSparse(m, rng);
-            B.generateSparse(n, rng);
+            A.generateSparse(m);
+            B.generateSparse(n);
 
             auto start = chrono::high_resolution_clock::now();
 
