@@ -49,12 +49,22 @@ public:
         }
     }
 
-    void generateSparse(int terms) {
+    void generateSparse(int terms) {//生成non dense
         int currentExp = 0;
         for (int i = 1; i <= terms; ++i) {
-            currentExp += i* (rand() %terms*500) + 10; // 一定遞增
+            currentExp += i* (rand()% 100000) + 20; // 一定遞增
             addTerm(1, currentExp);
         }
+    }
+
+    void printPoly() {
+        ListNode* curr = head->next; // 跳過head
+        while (curr != head) {
+            cout << curr->coef << "x^" << curr->exp;
+            if (curr->next != nullptr) {cout << " + ";}
+            curr = curr->next;
+        }
+        cout << endl;
     }
 
     Polynomial multiply(const Polynomial& other) {
@@ -100,9 +110,12 @@ int main() {
     srand(time(0));
     int m = 100; // 固定 m
     
-    vector<int> n_list = {10, 50, 100, 200, 300, 400, 500, 600, 800, 1000, 1200, 1500, 2000}; 
+    vector<int> n_list = {10, 50, 100, 200, 300, 400, 500, 600, 800, 1000, 1200, 1500, 1800, 2000, 3000, 5000}; 
     
     int num_runs = 10; 
+    Polynomial A, B;
+
+   
 
     cout << "實驗 1: Dense (稠密) 多項式 (平均 " << num_runs << " 次)" << endl;
     cout << "m \t n \t Avg_Time(microseconds)" << endl;
@@ -125,6 +138,9 @@ int main() {
         }
         cout << m << " \t " << n << " \t " << (total_time / num_runs) << endl;
     }
+
+     B.generateSparse(10);
+    B.printPoly();
 
 
     cout << "實驗 2: Non Dense (稀疏) 多項式 (平均 " << num_runs << " 次)" << endl;
