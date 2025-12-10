@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include <random>
 #include <algorithm>
 #include <ctime>
 #include <cstdlib>
@@ -19,14 +18,12 @@ struct ListNode {
     }
 };
 
-// 將多項式操作封裝成類別
 class Polynomial {
 private:
-    ListNode* head; // Circular linked list 的頭節點 (Dummy head)
-
+    ListNode* head; //頭節點
 public:
     Polynomial() {
-        head = new ListNode(0, 0);
+        head = new ListNode(0, -1);
         head->next = head; // Circular
     }
 
@@ -40,15 +37,13 @@ public:
         delete head;
     }*/
 
-    // 加入一項 (插在 dummy head 後面)
     void addTerm(int coef, int exp) {
         ListNode* newNode = new ListNode(coef, exp);
         newNode->next = head->next;
         head->next = newNode;
     }
     
-    // 生成 Dense 測試資料 (指數連續 0 ~ terms-1)
-    void generateDense(int terms) {
+    void generateDense(int terms) {// 生成 Dense
         for (int i = 0; i < terms; i++) {
             addTerm(1, i); 
         }
@@ -56,8 +51,8 @@ public:
 
     void generateSparse(int terms) {
         int currentExp = 0;
-        for (int i = 0; i < terms; ++i) {
-            currentExp += (rand() %100000) +10; // 確保嚴格遞增
+        for (int i = 1; i <= terms; ++i) {
+            currentExp += i* (rand() %terms*500) + 10; // 一定遞增
             addTerm(1, currentExp);
         }
     }
@@ -86,8 +81,7 @@ public:
                         searchPtr = pBIG;
                     }
                     else {
-                        // 沒抵銷，指標停在當前點
-                        searchPtr = BIG;
+                        searchPtr = BIG;// 沒抵銷，指標停在當前點
                     }
                 }
                 else {
@@ -104,13 +98,13 @@ public:
 
 int main() {
     srand(time(0));
-
     int m = 100; // 固定 m
+    
     vector<int> n_list = {10, 50, 100, 200, 300, 400, 500, 600, 800, 1000, 1200, 1500, 2000}; 
     
     int num_runs = 10; 
 
-    cout << "=== 實驗 1: Dense (稠密) 多項式 (平均 " << num_runs << " 次) ===" << endl;
+    cout << "實驗 1: Dense (稠密) 多項式 (平均 " << num_runs << " 次)" << endl;
     cout << "m \t n \t Avg_Time(microseconds)" << endl;
 
     for (int n : n_list) {
@@ -129,12 +123,11 @@ int main() {
 
             total_time += duration.count();
         }
-
         cout << m << " \t " << n << " \t " << (total_time / num_runs) << endl;
     }
 
 
-    cout << "=== 實驗 2: Non Dense (稀疏) 多項式 (平均 " << num_runs << " 次) ===" << endl;
+    cout << "實驗 2: Non Dense (稀疏) 多項式 (平均 " << num_runs << " 次)" << endl;
     cout << "m \t n \t Avg_Time(microseconds)" << endl;
 
     for (int n : n_list) {
@@ -153,7 +146,6 @@ int main() {
 
             total_time += duration.count();
         }
-        
         cout << m << " \t " << n << " \t " << (total_time/num_runs) << endl;
     }
 
