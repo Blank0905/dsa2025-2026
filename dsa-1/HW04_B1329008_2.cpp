@@ -27,7 +27,7 @@ public:
         head->next = head; // Circular
     }
 
-   /* ~Polynomial() {
+    ~Polynomial() {
         ListNode* t = head->next;
         while (t != head) {
             ListNode* t2 = t->next;
@@ -35,7 +35,7 @@ public:
             t = t2;
         }
         delete head;
-    }*/
+    }
 
     void addTerm(int coef, int exp) {
         ListNode* newNode = new ListNode(coef, exp);
@@ -110,7 +110,7 @@ int main() {
     srand(time(0));
     int m = 100; // 固定 m
     
-    vector<int> n_list = {10, 50, 100, 200, 300, 400, 500, 600, 800, 1000, 1200, 1500, 1800, 2000, 3000, 5000}; 
+    vector<int> n_list = {10, 50, 100, 200, 300, 400, 500, 600, 800, 1000, 1200, 1500, 1800, 2000}; 
     
     int num_runs = 10; 
     Polynomial A, B;
@@ -139,8 +139,8 @@ int main() {
         cout << m << " \t " << n << " \t " << (total_time / num_runs) << endl;
     }
 
-     B.generateSparse(10);
-    B.printPoly();
+    //B.generateSparse(10);
+    //B.printPoly();
 
 
     cout << "實驗 2: Non Dense (稀疏) 多項式 (平均 " << num_runs << " 次)" << endl;
