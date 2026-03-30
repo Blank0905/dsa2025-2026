@@ -27,7 +27,7 @@ void heapsort(int* arr, const int n) {
     }
 }
 
-void quicksort(int* a, const int left, const int right) {
+void quick_sort(int* a, const int left, const int right) {
     if(left < right) {
         int i = left;
         int j = right +1;
@@ -41,9 +41,13 @@ void quicksort(int* a, const int left, const int right) {
         }while(i < j);
         swap(a[left], a[j]);
 
-        quicksort(a, left, j-1);
-        quicksort(a, j+1, right);
+        quick_sort(a, left, j-1);
+        quick_sort(a, j+1, right);
     }
+}
+
+void quicksort(int* arr, const int n) {
+    quick_sort(arr, 1, n);
 }
 
 void insert (const int& e, int* arr, int i) {
@@ -62,7 +66,19 @@ void insertion_sort(int* arr, const int n) {
     }
 }
 
-void genarr (int* arr, int n) {//陣列的第0格不用
+void insertionsort(int* arr, int n) {
+    for(int i = 1; i<n;i++) {
+        int temp = arr[i];
+        int j = i-1;
+        while(j>=0&&temp<arr[j]){
+            arr[j+1] = arr[j];
+            j--;
+        }
+        arr[j+1] = temp;
+    }
+}
+
+void genarr (int* arr, int n) {//陣列的第0格不用, n是幾就生幾個數字
     random_device rd;
     mt19937 gen(rd());
     uniform_int_distribution<> distrib(1, 50000);
@@ -71,32 +87,72 @@ void genarr (int* arr, int n) {//陣列的第0格不用
     }
 }
 
-int main() {
-    int n = 10;
-    int arr[n+1];
-    genarr(arr, n); 
-
-    auto start = chrono::high_resolution_clock::now();
-    
-    quicksort(arr, 1, n);
-    //heapsort(arr, n);
-    //insertion_sort(arr, n);
-    
-    auto end = chrono::high_resolution_clock::now();
-
-    auto us_int = chrono::duration_cast<chrono::microseconds>(end - start);
-    auto ns_int = chrono::duration_cast<chrono::nanoseconds>(end - start);
-
-    cout << us_int.count() << ",單位:10^-6秒" << endl;
-    cout << ns_int.count() << ",單位:10^-9秒" << endl;
-
-    for(int i =1; i <=10; i++) {
-        cout << arr[i] << " ";
+void manual(int* arr, int n) {
+    int choose;
+    cout << "1.HeapSort, 2.InsertionSort, 3.QickSort:";
+    cin >> choose;
+    if (choose == 1) {
+        heapsort(arr, n);
+        for(int i =1; i <=n; i++) {
+            cout << arr[i] << " ";
+        }
     }
+    else if (choose == 2) {
+        insertion_sort(arr, n);
+        for(int i =1; i <=n; i++) {
+            cout << arr[i] << " ";
+        }
+    }
+    else if (choose == 3) {
+        quicksort(arr, n);
+        for(int i =1; i <=n; i++) {
+            cout << arr[i] << " ";
+        }
+    }
+    else{
+        cout << "沒這個";
+    }
+}
 
-    // for(int i =n-5; i <n; i++) {
-    //     cout << a[i] << " ";
-    // }
+int main() {
+    int m;
+    cout << "1.看結果的, 2.實驗那個";
+    cin >> m;
+
+    if(m == 1) {
+        int n;
+        cout << "要幾個值?";
+        cin >> n;
+        int arr[n+1];
+        genarr(arr, n);
+        manual(arr, n);
+    }
+    else if (m == 2) {
+        int list[5] = {10, 100, 1000, 10000, 100000};
+
+        for (int i=0; i<5; i++ ) {
+            double total_time = 0;
+            for(int j = 0;j<100;j++) {
+                int arr[list[i]+1];
+                genarr(arr,list[i]);
+                
+                auto start = chrono::high_resolution_clock::now();
+            
+                //quicksort(arr, 1, list[i]);
+                heapsort(arr, list[i]);
+                //insertion_sort(arr, list[i]);
+                //insertionsort(arr, list[i]);
+                
+                auto end = chrono::high_resolution_clock::now();
+                auto ns_int = chrono::duration_cast<chrono::nanoseconds>(end - start);
+                total_time += ns_int.count();
+            }
+            cout << (total_time/100) << ",單位:10^-9秒" << endl;
+        }
+    }
+    else{
+        cout << "0.0";
+    }
 
     return 0;
 }
