@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>助教課練習網頁</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+        section { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        .flex { display: flex; gap: 20px; align-items: flex-start; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .btn-main { background: #4CAF50; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        .form-box { margin-top: 15px; background: #f0f0f0; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>💰 網頁帳本</h1>
+    <section>
+        <div class="flex">
+            <div><label>當前使用者：</label><select id="user_selector"><option value="">請選擇用戶...</option></select></div>
+            <button class="btn-main" onclick="$('#combined_add_form').toggle()">+ 新增用戶與初始帳號</button>
+        </div>
+        <div id="combined_add_form" class="form-box" style="display:none;">
+            <h4>🚀 快速開戶專區</h4>
+            <input type="text" id="reg_user_name" placeholder="用戶姓名">
+            <input type="text" id="reg_acc_name" placeholder="帳號名稱">
+            <input type="number" id="reg_acc_balance" placeholder="初始餘額">
+            <button onclick="addUserWithAccount()">確認建立並登入</button>
+        </div>
+    </section>
+
+    <div class="flex">
+        <section style="flex: 1;">
+            <h3>🏦 我的帳戶資產</h3>
+            <table id="account_table"><thead><tr><th>帳號名稱</th><th>餘額</th></tr></thead><tbody></tbody></table>
+        </section>
+        <section style="flex: 2;">
+            <h3>📝 新增記帳</h3>
+            <select id="trans_acc_id"><option value="">選擇扣款帳號</option></select>
+            <select id="trans_cat_id"><option value="">選擇分類</option></select>
+            <input type="text" id="trans_desc" placeholder="品項描述">
+            <input type="number" id="trans_amount" placeholder="金額">
+            <select id="trans_curr_id"></select>
+            <button class="btn-main" id="btn_save_trans">儲存紀錄</button>
+        </section>
+    </div>
+
+    <section>
+        <div class="flex" style="justify-content: space-between;">
+            <h3>📜 消費歷史紀錄</h3>
+            <div>顯示幣別：<input type="radio" name="currency_view" value="original" checked> 原始貨幣 <input type="radio" name="currency_view" value="twd"> 統一轉換台幣 (TWD)</div>
+        </div>
+        <table id="transaction_table"><thead><tr><th>時間</th><th>分類</th><th>描述</th><th>金額</th><th>幣別</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <script>
+        let currentUserId = null;
+        let currencyRates = {};
+
+        $(document).ready(function() {
+            loadInitialData();
+            $('#user_selector').on('change', function() {
+                currentUserId = $(this).val();
+                if (currentUserId) loadUserData();
+            });
+            $('input[name="currency_view"]').on('change', renderTransactionTable);
+            $('#btn_save_trans').on('click', addTransaction);
+        });
+
+        function loadInitialData() {
+            $.get('api.php?action=get_meta', function(data) {
+                data.users.forEach(u => $('#user_selector').append(`<option value="${u.user_id}">${u.user_name}</option>`));
+                data.categories.forEach(c => $('#trans_cat_id').append(`<option value="${c.cat_id}">${c.cat_name}</option>`));
+                data.currencies.forEach(curr => {
+                    currencyRates[curr.curr_id] = { code: curr.code, rate: curr.exchange_rate };
+                    $('#reg_acc_curr, #trans_curr_id').append(`<option value="${curr.curr_id}">${curr.code}</option>`);
+                });
+            });
+        }
+
+        let userTransactions = []; 
+        function loadUserData() {
+            $.get('api.php?action=get_user_detail', { user_id: currentUserId }, function(data) {
+                let accHtml = '';
+                $('#trans_acc_id').html('<option value="">選擇扣款帳號</option>');
+                data.accounts.forEach(acc => {
+                    accHtml += `<tr><td>${acc.acc_name}</td><td>${acc.balance}</td></tr>`;
+                    $('#trans_acc_id').append(`<option value="${acc.acc_id}">${acc.acc_name}</option>`);
+                });
+                $('#account_table tbody').html(accHtml);
+                userTransactions = data.transactions;
+                renderTransactionTable();
+            });
+        }
+
+        function renderTransactionTable() {
+            const viewMode = $('input[name="currency_view"]:checked').val();
+            let html = '';
+            userTransactions.forEach(t => {
+                let amt = t.amount;
+                let code = t.curr_code;
+                // TODO: 實作四
+
+                html += `<tr><td>${t.created_at}</td><td>${t.cat_name}</td><td>${t.description}</td><td>${amt}</td><td>${code}</td></tr>`;
+            });
+            $('#transaction_table tbody').html(html);
+        }
+
+        function addUserWithAccount() {
+            const data = {
+                // TODO: 實作一
+            };
+            $.post('api.php?action=add_user_with_account', data, () => location.reload());
+        }
+
+        function addTransaction() {
+            const data = {
+                // TODO: 實作三
+            };
+            $.post('api.php?action=add_transaction', data, () => { alert('記帳成功！'); loadUserData(); });
+        }
+    </script>
+</body>
+</html>
