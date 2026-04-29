@@ -1,0 +1,215 @@
+#ifndef STUDENTSOLVER_CPP
+#define STUDENTSOLVER_CPP
+
+#include "Maze.cpp"
+
+bool solveByDFS(const Maze& maze, PathNode*& path) {
+    int n = maze.getN();
+    path = nullptr;
+    //TODO 1 : Solve by DFS
+    bool** visited = new bool*[n];
+    int** parentR = new int*[n];
+    int** parentC = new int*[n];
+    for(int i=0; i<n; i++) {
+        visited[i] = new bool[n]();
+        parentR[i] = new int[n];
+        parentC[i] = new int[n];
+        for(int j=0; j<n; j++) {
+            parentR[i][j] = -1;
+            parentC[i][j] = -1;
+        }
+    }
+
+    PathNode* stackTop = nullptr;
+    auto push = [&](int r, int c) {
+        PathNode* node = new PathNode(r, c, stackTop);
+        stackTop = node;
+    };
+    auto pop = [&](int& r, int& c) {
+        if (!stackTop) return false;
+        r = stackTop->r;
+        c = stackTop->c;
+        PathNode* temp = stackTop;
+        stackTop = stackTop->next;
+        delete temp;
+        return true;
+    };
+
+    int sR = maze.getStartR();
+    int sC = maze.getStartC();
+    int eR = maze.getEndR();
+    int eC = maze.getEndC();
+
+    push(sR, sC);
+    
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+
+    bool found = false;
+
+    while (stackTop) {
+        int r, c;
+        pop(r, c);
+
+        if (!visited[r][c]) {
+            visited[r][c] = true;
+
+            if (r == eR && c == eC) {
+                found = true;
+                break;
+            }
+
+            for (int i = 0; i < 4; i++) {
+                int nr = r + dr[i];
+                int nc = c + dc[i];
+                if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
+                    if (maze.getGrid(nr, nc) == 0 && !visited[nr][nc]) {
+                        parentR[nr][nc] = r;
+                        parentC[nr][nc] = c;
+                        push(nr, nc);
+                    }
+                }
+            }
+        }
+    }
+
+    if (found) {
+        int currR = eR, currC = eC;
+        while (currR != sR || currC != sC) {
+            PathNode* node = new PathNode(currR, currC, path);
+            path = node;
+            int pr = parentR[currR][currC];
+            int pc = parentC[currR][currC];
+            currR = pr;
+            currC = pc;
+        }
+        PathNode* startNode = new PathNode(sR, sC, path);
+        path = startNode;
+    }
+
+    while (stackTop) {
+        int r, c;
+        pop(r, c);
+    }
+
+    for(int i=0; i<n; i++) {
+        delete[] visited[i];
+        delete[] parentR[i];
+        delete[] parentC[i];
+    }
+    delete[] visited;
+    delete[] parentR;
+    delete[] parentC;
+
+    return found;
+}
+
+bool solveByBFS(const Maze& maze, PathNode*& path) {
+    int n = maze.getN();
+    path = nullptr;
+    //TODO 2 : Solve by BFS
+    bool** visited = new bool*[n];
+    int** parentR = new int*[n];
+    int** parentC = new int*[n];
+    for(int i=0; i<n; i++) {
+        visited[i] = new bool[n]();
+        parentR[i] = new int[n];
+        parentC[i] = new int[n];
+        for(int j=0; j<n; j++) {
+            parentR[i][j] = -1;
+            parentC[i][j] = -1;
+        }
+    }
+
+    PathNode* head = nullptr;
+    PathNode* tail = nullptr;
+
+    auto enqueue = [&](int r, int c) {
+        PathNode* node = new PathNode(r, c, nullptr);
+        if (!head) {
+            head = tail = node;
+        } else {
+            tail->next = node;
+            tail = node;
+        }
+    };
+
+    auto dequeue = [&](int& r, int& c) {
+        if (!head) return false;
+        r = head->r;
+        c = head->c;
+        PathNode* temp = head;
+        head = head->next;
+        if (!head) tail = nullptr;
+        delete temp;
+        return true;
+    };
+
+    int sR = maze.getStartR();
+    int sC = maze.getStartC();
+    int eR = maze.getEndR();
+    int eC = maze.getEndC();
+
+    enqueue(sR, sC);
+    visited[sR][sC] = true;
+
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+
+    bool found = false;
+
+    while (head) {
+        int r, c;
+        dequeue(r, c);
+
+        if (r == eR && c == eC) {
+            found = true;
+            break;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            int nr = r + dr[i];
+            int nc = c + dc[i];
+            if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
+                if (maze.getGrid(nr, nc) == 0 && !visited[nr][nc]) {
+                    visited[nr][nc] = true;
+                    parentR[nr][nc] = r;
+                    parentC[nr][nc] = c;
+                    enqueue(nr, nc);
+                }
+            }
+        }
+    }
+
+    if (found) {
+        int currR = eR, currC = eC;
+        while (currR != sR || currC != sC) {
+            PathNode* node = new PathNode(currR, currC, path);
+            path = node;
+            int pr = parentR[currR][currC];
+            int pc = parentC[currR][currC];
+            currR = pr;
+            currC = pc;
+        }
+        PathNode* startNode = new PathNode(sR, sC, path);
+        path = startNode;
+    }
+
+    while (head) {
+        int r, c;
+        dequeue(r, c);
+    }
+
+    for(int i=0; i<n; i++) {
+        delete[] visited[i];
+        delete[] parentR[i];
+        delete[] parentC[i];
+    }
+    delete[] visited;
+    delete[] parentR;
+    delete[] parentC;
+
+    return found;
+}
+
+#endif

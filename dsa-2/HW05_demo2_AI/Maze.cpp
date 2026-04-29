@@ -48,9 +48,7 @@ public:
     void display() const;
     void displayPath(PathNode* path) const;
     bool validatePath(PathNode* path) const;
-    int getGrid(int r, int c) {
-        return grid[r][c];
-    }
+    int getGrid(int r, int c) const { return grid[r][c]; }
 
 };
 
@@ -268,8 +266,29 @@ void Maze::displayPath(PathNode* path) const {
 
 bool Maze::validatePath(PathNode* path) const {
     // TODO 3: 請實作路徑驗證
-    (void)path;
-    return false;
+    //(void)path;
+    if (!path) return false;
+    if (path->r != sR || path->c != sC) return false;
+
+    PathNode* curr = path;
+    while (curr) {
+        if (curr->r < 0 || curr->r >= n || curr->c < 0 || curr->c >= n) return false;
+        if (grid[curr->r][curr->c] == 1) return false;
+        
+        if (curr->next) {
+            int dr = curr->next->r - curr->r;
+            int dc = curr->next->c - curr->c;
+            if (!((dr == 1 && dc == 0) || (dr == -1 && dc == 0) || 
+                  (dr == 0 && dc == 1) || (dr == 0 && dc == -1))) {
+                return false;
+            }
+        } else {
+            if (curr->r != eR || curr->c != eC) return false;
+        }
+        curr = curr->next;
+    }
+    
+    return true;
 }
 
 #endif

@@ -3,11 +3,76 @@
 
 #include "Maze.cpp"
 
+void mypush(PathNode*& stackTop, int r, int c) { //stack push
+    PathNode* node = new PathNode(r, c, stackTop);
+    stackTop = node;
+}
+
+bool mypop(PathNode*& stackTop, int& r, int& c) { //stack pop
+    if(!stackTop) {return false;}
+    r = stackTop -> r;
+    c = stackTop -> c;
+    PathNode* temp = stackTop;
+    stackTop = stackTop->next;
+    delete temp;
+    return true;
+}
+
 bool solveByDFS(const Maze& maze, PathNode*& path) {
     int n = maze.getN();
-    (void)n;
     path = nullptr;
     //TODO 1 : Solve by DFS
+    bool** visited = new bool*[n];
+    int** parentR = new int *[n];
+    int** parentC = new int *[n];
+    for(int i=0; i<n; i++) {
+        visited[i] = new bool[n](); //把每一格都設成false
+        parentR[i] = new int[n];
+        parentC[i] = new int[n];
+        for(int j=0; j<n;j++) {
+            parentR[i][j] = -1;
+            parentC[i][j] = -1;
+        }
+    }
+
+    PathNode* stackTop = nullptr;
+    int sR = maze.getStartR();
+    int sC = maze.getStartC();
+    int eR = maze.getEndR();
+    int eC = maze.getEndC();
+    mypush(stackTop, sR, sC);
+
+    int dr[4] = {1, -1, 0, 0};
+    int dc[4] = {0, 0, 1, -1};
+    bool found = false;
+    
+    while (!stackTop) {
+        int r;
+        int c;
+        mypop(stackTop, r, c);
+
+        if(!visited[r][c]) {
+            visited[r][c] = true;
+
+            if(r == eR && c == eC) {
+                found = true;
+                break;
+            }
+
+            for(int i=0; i<4; i++) {
+                int nr = r+dr[i];
+                int nc = c+dc[i];
+
+                if(nr>=0 && nr<n && nc>=0 && nc<n) {
+                    if(maze.getGrid(nr, nc) == 0) {
+
+                    }
+                }
+            }
+        }
+
+    }
+
 
     return false;
 }
