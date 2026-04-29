@@ -46,7 +46,7 @@ bool solveByDFS(const Maze& maze, PathNode*& path) {
     int dc[4] = {0, 0, 1, -1};
     bool found = false;
     
-    while (!stackTop) {
+    while (stackTop) {
         int r;
         int c;
         mypop(stackTop, r, c);
@@ -64,17 +64,45 @@ bool solveByDFS(const Maze& maze, PathNode*& path) {
                 int nc = c+dc[i];
 
                 if(nr>=0 && nr<n && nc>=0 && nc<n) {
-                    if(maze.getGrid(nr, nc) == 0) {
-
+                    if(maze.getGrid(nr, nc) == 0 && !visited[nr][nc]) {
+                        parentR[nr][nc] = r;
+                        parentC[nr][nc] = c;
+                        mypush(stackTop, nr, nc);   
                     }
                 }
             }
         }
-
     }
 
+    if(found) {
+        int currR = eR;
+        int currC = eC;
+        while(currR != sR || currC != sC) {
+            PathNode* node = new PathNode(currR, currC, path);
+            path = node;
+            int tempR = parentR[currR][currC];
+            int tempC = parentC[currR][currC];
+            currR = tempR;
+            currC = tempC;
+        }
+        PathNode* start = new PathNode(sR, sC, path);
+        path = start;
+    }
+    while(stackTop) {
+        int r, c;
+        mypop(stackTop, r, c);
+    }
+    for(int i=0; i<n; i++) {
+        delete[] visited[i];
+        delete[] parentR[i];
+        delete[] parentC[i];
+    }
 
-    return false;
+    delete[] visited;
+    delete[] parentR;
+    delete[] parentC;
+
+    return found;
 }
 
 bool solveByBFS(const Maze& maze, PathNode*& path) {

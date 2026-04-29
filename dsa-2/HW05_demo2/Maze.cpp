@@ -48,7 +48,7 @@ public:
     void display() const;
     void displayPath(PathNode* path) const;
     bool validatePath(PathNode* path) const;
-    int getGrid(int r, int c) {
+    int getGrid(int r, int c) const {
         return grid[r][c];
     }
 
