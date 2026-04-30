@@ -109,8 +109,8 @@ void Maze::generateMaze(unsigned int seed) {
     grid[1][1] = 0;
     stk[++top] = {0, 0};
 
-    const int dr[] = {-1, 1, 0, 0};
-    const int dc[] = {0, 0, -1, 1};
+    const int dr[] = {0, -1, 0, 1};
+    const int dc[] = {-1, 0, 1, 0};
 
     while (top >= 0) {
         Cell cur = stk[top];
