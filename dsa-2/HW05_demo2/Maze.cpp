@@ -274,22 +274,19 @@ bool Maze::validatePath(PathNode* path) const {
     PathNode* curr = path;
     while (curr != nullptr) {
         if (grid[curr->r][curr->c] != 0) {
-            cout << "走到不是路的地方" << endl;
-            return false;
+            return false;//走到不是路的地方
         }
         
         if (curr->next != nullptr) {
             PathNode* next = curr->next;
             int dist = abs(curr->r - next->r) + abs(curr->c - next->c);
             if (dist != 1) {
-                cout << "有跳格" << endl;
-                return false;
+                return false;//有跳格
             }
         } 
         else {
             if (curr->r != eR || curr->c != eC) {
-                cout << "沒到終點" << endl;
-                return false;
+                return false;//沒到終點
             }
         }
         curr = curr->next;
