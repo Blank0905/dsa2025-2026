@@ -268,8 +268,33 @@ void Maze::displayPath(PathNode* path) const {
 
 bool Maze::validatePath(PathNode* path) const {
     // TODO 3: 請實作路徑驗證
-    (void)path;
-    return false;
+    if (path == nullptr) return false;
+    if (path->r != sR || path->c != sC) return false;
+
+    PathNode* curr = path;
+    while (curr != nullptr) {
+        if (grid[curr->r][curr->c] != 0) {
+            cout << "走到不是路的地方" << endl;
+            return false;
+        }
+        
+        if (curr->next != nullptr) {
+            PathNode* next = curr->next;
+            int dist = abs(curr->r - next->r) + abs(curr->c - next->c);
+            if (dist != 1) {
+                cout << "有跳格" << endl;
+                return false;
+            }
+        } 
+        else {
+            if (curr->r != eR || curr->c != eC) {
+                cout << "沒到終點" << endl;
+                return false;
+            }
+        }
+        curr = curr->next;
+    }
+    return true;
 }
 
 #endif
