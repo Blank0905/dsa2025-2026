@@ -63,8 +63,8 @@ bool solveByDFS(const Maze& maze, PathNode*& path) {
     int eC = maze.getEndC();
     push(stackTop, sR, sC);
 
-    int dr[4] = {1, -1, 0, 0};
-    int dc[4] = {0, 0, 1, -1};
+    int dr[4] = {0, -1, 0, 1};
+    int dc[4] = {-1, 0, 1, 0};
     bool found = false;
     
     while (stackTop) {
