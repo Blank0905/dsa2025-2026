@@ -3,12 +3,12 @@
 
 #include "Maze.cpp"
 
-void mypush(PathNode*& stackTop, int r, int c) { //stack push
+void push(PathNode*& stackTop, int r, int c) { //stack push
     PathNode* node = new PathNode(r, c, stackTop);
     stackTop = node;
 }
 
-bool mypop(PathNode*& stackTop, int& r, int& c) { //stack pop
+bool pop(PathNode*& stackTop, int& r, int& c) { //stack pop
     if(!stackTop) {return false;}
     r = stackTop -> r;
     c = stackTop -> c;
@@ -61,7 +61,7 @@ bool solveByDFS(const Maze& maze, PathNode*& path) {
     int sC = maze.getStartC();
     int eR = maze.getEndR();
     int eC = maze.getEndC();
-    mypush(stackTop, sR, sC);
+    push(stackTop, sR, sC);
 
     int dr[4] = {1, -1, 0, 0};
     int dc[4] = {0, 0, 1, -1};
@@ -70,7 +70,7 @@ bool solveByDFS(const Maze& maze, PathNode*& path) {
     while (stackTop) {
         int r;
         int c;
-        mypop(stackTop, r, c);
+        pop(stackTop, r, c);
 
         if(!visited[r][c]) {
             visited[r][c] = true;
@@ -85,10 +85,10 @@ bool solveByDFS(const Maze& maze, PathNode*& path) {
                 int nc = c+dc[i];
 
                 if(nr>=0 && nr<n && nc>=0 && nc<n) {
-                    if(maze.getGrid(nr, nc) == 0 && !visited[nr][nc]) {
+                    if(maze.getGrid(nr, nc) == 0 && !visited[nr][nc] && parentC[nr][nc]==-1) {
                         parentR[nr][nc] = r;
                         parentC[nr][nc] = c;
-                        mypush(stackTop, nr, nc);   
+                        push(stackTop, nr, nc);   
                     }
                 }
             }
@@ -111,7 +111,7 @@ bool solveByDFS(const Maze& maze, PathNode*& path) {
     }
     while(stackTop) {
         int r, c;
-        mypop(stackTop, r, c);
+        pop(stackTop, r, c);
     }
     for(int i=0; i<n; i++) {
         delete[] visited[i];
@@ -155,47 +155,45 @@ bool solveByBFS(const Maze& maze, PathNode*& path) {
     int dc[4] = {0, 0, 1, -1};
     bool found = false;
     enqueue(head, tail, sR, sC);
+    visited[sR][sC] = true;
 
     while(head) {
         int r;
         int c;
         dequeue(head, tail, r, c);
 
-        if(!visited[r][c]) {
-            visited[r][c] = true;
-
-            if(r == eR && c == eC) {
-                found = true;
-                break;
-            }
-
-            for(int i=0; i<4; i++) {
-                int nr;
-                int nc;
-                nr = r + dr[i];
-                nc = c + dc[i];
-                if(nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                    if(maze.getGrid(nr, nc) == 0 && !visited[nr][nc] && parentR[nr][nc] == -1) {
-                        parentR[nr][nc] = r;
-                        parentC[nr][nc] = c;
-                        enqueue(head, tail, nr, nc);
-                    }
+        if(r == eR && c == eC) {
+            found = true;
+            break;
+        }
+        for(int i=0; i<4; i++) {
+            int nr;
+            int nc;
+            nr = r + dr[i];
+            nc = c + dc[i];
+            if(nr >= 0 && nr < n && nc >= 0 && nc < n) {
+                if(maze.getGrid(nr, nc) == 0 && !visited[nr][nc]) {
+                    visited[nr][nc] = true;
+                    parentR[nr][nc] = r;
+                    parentC[nr][nc] = c;
+                    enqueue(head, tail, nr, nc);
                 }
             }
         }
+        
     }
 
     if(found) {
         int currR = eR;
         int currC = eC;
         while(currR != sR || currC != sC) {
-            mypush(path, currR, currC);
+            push(path, currR, currC);
             int tempR = parentR[currR][currC];
             int tempC = parentC[currR][currC];
             currR = tempR;
             currC = tempC;
         }
-        mypush(path, sR, sC);
+        push(path, sR, sC);
     }
 
     while(head) {

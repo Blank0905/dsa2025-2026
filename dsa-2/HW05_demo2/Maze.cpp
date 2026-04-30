@@ -273,6 +273,9 @@ bool Maze::validatePath(PathNode* path) const {
 
     PathNode* curr = path;
     while (curr != nullptr) {
+        if (curr->r < 0 || curr->r >= n || curr->c < 0 || curr->c >= n) {
+            return false; // 走出迷宮外了
+        }
         if (grid[curr->r][curr->c] != 0) {
             return false;//走到不是路的地方
         }
